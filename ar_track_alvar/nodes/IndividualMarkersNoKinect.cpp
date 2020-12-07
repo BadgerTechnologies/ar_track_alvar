@@ -81,6 +81,12 @@ void getCapCallback(const sensor_msgs::ImageConstPtr& image_msg)
   // If we've already gotten the cam info, then go ahead
   if (cam->getCamInfo_)
   {
+    if (output_frame.empty())
+    {
+      ROS_ERROR_THROTTLE(1, "Param 'output_frame' has to be set for the tag pose to be published.");
+      return;
+    }
+
     try
     {
       tf::StampedTransform CamToOutput;
@@ -244,6 +250,10 @@ void configCallback(ar_track_alvar::ParamsConfig& config, uint32_t level)
   marker_size = config.marker_size;
   max_new_marker_error = config.max_new_marker_error;
   max_track_error = config.max_track_error;
+  if (!config.output_frame.empty())
+  {
+    output_frame = config.output_frame;
+  }
 }
 
 void enableCallback(const std_msgs::BoolConstPtr& msg)
@@ -302,11 +312,6 @@ int main(int argc, char* argv[])
     pn.setParam("max_frequency", max_frequency);  // in case it was not set.
     pn.param("marker_resolution", marker_resolution, 5);
     pn.param("marker_margin", marker_margin, 2);
-    if (!pn.getParam("output_frame", output_frame))
-    {
-      ROS_ERROR("Param 'output_frame' has to be set.");
-      exit(EXIT_FAILURE);
-    }
 
     // Camera input topics. Use remapping to map to your camera topics.
     cam_image_topic = "camera_image";
